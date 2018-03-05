@@ -8,14 +8,12 @@
 # https://shiny.rstudio.com/tutorial/written-tutorial/lesson5/
 
 # 1. ( ) File upload: https://shiny.rstudio.com/gallery/file-upload.html
-# 2. ( ) Choose the variable to map for bubble size
-# 3. (/) Choose the variable to map for bubble color: https://github.com/daattali/colourpicker
-# 4. ( ) Adjust the size 
-# 5. ( ) Choose from the color template: https://drsimonj.svbtle.com/creating-corporate-colour-palettes-for-ggplot2
-
-
+# 2. (/) Choose the variable to map for state color: https://github.com/daattali/colourpicker
+# 3. (/) Choose from the color template: https://drsimonj.svbtle.com/creating-corporate-colour-palettes-for-ggplot2
+# 4. ( ) Save the plot to local
 
 # Read Data ---------------------------------------------------------------
+
 
 library('dplyr')
 library('maps')
@@ -28,10 +26,8 @@ library('plotly')
 library('fiftystater')
 
 states <- map_data("state")
-subsidy.summary <- read.csv("V:/Sifan/Subsidy-Tracker/summary.csv")
-#subsidy.summary <- read.csv('../summary.csv')
+subsidy.summary <- read.csv("summary.csv")
 subsidy.summary$ID <- tolower(subsidy.summary$State)
-
 
 
 

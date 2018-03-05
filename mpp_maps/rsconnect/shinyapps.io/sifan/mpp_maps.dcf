@@ -1,0 +1,12 @@
+name: mpp_maps
+title: mpp_maps
+username:
+account: sifan
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 293382
+bundleId: 1253307
+url: https://sifan.shinyapps.io/mpp_maps/
+when: 1520263102.16676
+asMultiple: FALSE
+asStatic: FALSE
