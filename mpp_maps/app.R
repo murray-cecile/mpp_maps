@@ -48,7 +48,7 @@ ui <- fluidPage(
       fileInput('file1',"Choose CSV File",
                 accept = c(".csv")),
       
-      actionButton("choice", "Upload"),
+      actionButton("choice", "show Data"),
       
       tags$hr(),
       
@@ -56,14 +56,16 @@ ui <- fluidPage(
                   choices = NULL),
     
       colourInput("low", "Choose a color for low value","#deebf7"),
-      colourInput("high", "Choose a color for high value", "#08519c")
+      colourInput("high", "Choose a color for high value", "#08519c"),
+      
+      downloadButton("plot", label = "Download the plot")
     ),
-    mainPanel(
-      
+   
+     mainPanel(
       tableOutput("contents"),
-      
       plotOutput("map"))
-  )
+      
+    )
   )
 
 # Server logic ----
@@ -80,17 +82,22 @@ server <- function(input, output,session) {
     df
   })
   
-  # output$contents <- renderTable({
-  #   
-  #   input_data <- info()
-  #   head(input_data)
-  #   
-  # })
-  # 
+  output$contents <- renderTable({
+
+    input_data <- info()
+    head(input_data)
+
+  })
+
   output$map <- renderPlot({
+    print(plotInput())
+  })
+    
+    
+  plotInput <- function(){
     
     input_data <- info()
- 
+    
     map_wrapper <- ggplot() + 
       geom_map(data = states, map = fifty_states, aes(x = long, y = lat, map_id = region),fill = "white", color = "grey") +
       geom_map(data = input_data, map = fifty_states, aes_string(fill = input$var, map_id = 'State')) +
@@ -103,15 +110,23 @@ server <- function(input, output,session) {
     
     if (is.discrete(input_data[[input$var]])){
       map_wrapper + 
-      scale_fill_brewer()
+        scale_fill_brewer()
     } else {
       map_wrapper + 
-      scale_fill_gradient(low = input$low, high = input$high)
-      }
+        scale_fill_gradient(low = input$low, high = input$high)
+    }
     
-        
     
-  })
+  } 
+    
+  
+  output$plot <- downloadHandler(
+    filename = 'plot.pdf',
+    content = function(file){
+      ggsave(file, plotInput(),device = 'pdf',width = 16, height = 10.4)
+    }
+  )
+  
 }
 
 # Run app ----
