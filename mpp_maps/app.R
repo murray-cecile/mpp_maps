@@ -1,8 +1,6 @@
 
 # README ------------------------------------------------------------------
 
-# Sifan Liu
-
 # KEY FUNCTIONS to be developed
 
 # https://shiny.rstudio.com/tutorial/written-tutorial/lesson5/
@@ -12,69 +10,106 @@
 # 3. (/) Choose from the color template: https://drsimonj.svbtle.com/creating-corporate-colour-palettes-for-ggplot2
 # 4. ( ) Save the plot to local
 
+
+# Author: Sifan Liu
+# Date: Thu Jul 26 09:13:31 2018
+# --------------
+pkgs <- c('dplyr','maps','mapproj','ggplot2','scales','ggthemes','RColorBrewer','plotly','fiftystater',
+          'shiny','colourpicker','plyr')
+
+# check <- sapply(pkgs,require,warn.conflicts = TRUE,character.only = TRUE)
+# if(any(!check)){
+#     pkgs.missing <- pkgs[!check]
+#     install.packages(pkgs.missing)
+#     check <- sapply(pkgs.missing,require,warn.conflicts = TRUE,character.only = TRUE)
+#   }
+
+sapply(pkgs,require,warn.conflicts = TRUE,character.only = TRUE)
+
 # Read Data ---------------------------------------------------------------
-
-
-library('dplyr')
-library('maps')
-library('mapproj')
-library('ggplot2')
-library('scales')
-library('ggthemes')
-library('RColorBrewer')
-library('plotly')
-library('fiftystater')
-
 states <- map_data("state")
-subsidy.summary <- read.csv("summary.csv")
-subsidy.summary$ID <- tolower(subsidy.summary$State)
+
+
 
 
 
 # Shiny R -----------------------------------------------------------------
 
-library(shiny)
-library(colourpicker)
-
 
 ui <- fluidPage(
-  titlePanel("Subsidy Tracker"),
+  titlePanel("US State Mapping Tool"),
   
   sidebarLayout(
+    
     sidebarPanel(
-      helpText("Create state maps with 
-               information from GJF Subsidy Tracker"),
       
-      selectInput("var", 
-                  label = "Choose a variable to display",
-                  choices = c("Share of foreign investment", 
-                              "Share of foreign mega deals"),
-                  selected = "Share of foreign investment"),
+      helpText("For help: sliu@brookings.edu"),
+      
+      fileInput('file1',"Choose CSV File",
+                accept = c(".csv")),
+      
+      actionButton("choice", "Upload"),
+      
+      tags$hr(),
+      
+      selectInput("var", "Choose a variable to plot",
+                  choices = NULL),
     
       colourInput("low", "Choose a color for low value","#deebf7"),
       colourInput("high", "Choose a color for high value", "#08519c")
     ),
-    mainPanel(plotOutput("map"))
+    mainPanel(
+      
+      tableOutput("contents"),
+      
+      plotOutput("map"))
   )
   )
 
 # Server logic ----
-server <- function(input, output) {
+server <- function(input, output,session) {
+  
+  info <- eventReactive(input$choice,{
+    req(input$file1)
+    
+    df <- read.csv(input$file1$datapath)
+    df$State <- tolower(df$State)
+    vars <- names(df[-1])
+    updateSelectInput(session,'var','Choose a variable to plot', choices = vars)
+    
+    df
+  })
+  
+  # output$contents <- renderTable({
+  #   
+  #   input_data <- info()
+  #   head(input_data)
+  #   
+  # })
+  # 
   output$map <- renderPlot({
     
-    data <- switch(input$var, 
-                   "Share of foreign investment" = subsidy.summary$foreign.share, 
-                   "Share of foreign mega deals" = subsidy.summary$mega.foreign.share)
-    ggplot() + 
+    input_data <- info()
+ 
+    map_wrapper <- ggplot() + 
       geom_map(data = states, map = fifty_states, aes(x = long, y = lat, map_id = region),fill = "white", color = "grey") +
-      geom_map(data = subsidy.summary, map = fifty_states, aes(fill = data, map_id = ID)) +
-      scale_fill_gradient(low = input$low, high = input$high) + 
+      geom_map(data = input_data, map = fifty_states, aes_string(fill = input$var, map_id = 'State')) +
       labs(x=NULL, y=NULL) + 
       coord_map("albers", lat0 = 39, lat1 = 45) + 
       theme(panel.border = element_blank()) + 
       theme(panel.background = element_blank()) + 
       theme(axis.ticks = element_blank()) + 
       theme(axis.text = element_blank())
+    
+    if (is.discrete(input_data[[input$var]])){
+      map_wrapper + 
+      scale_fill_brewer()
+    } else {
+      map_wrapper + 
+      scale_fill_gradient(low = input$low, high = input$high)
+      }
+    
+        
     
   })
 }
