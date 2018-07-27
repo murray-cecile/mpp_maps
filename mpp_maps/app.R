@@ -104,7 +104,7 @@ server <- function(input, output,session) {
     input_data <- info()
     
     map_wrapper <- ggplot() + 
-      geom_map(data = states, map = fifty_states, size = 2,
+      geom_map(data = states, map = fifty_states, size = 1,
                aes(x = long, y = lat, map_id = region), 
                fill = "light grey", color = "white") +
       geom_map(data = input_data, map = fifty_states, color = "white",
@@ -115,7 +115,8 @@ server <- function(input, output,session) {
     
     if (is.discrete(input_data[[input$var]])){
       map_wrapper + 
-        scale_fill_brewer(labels = comma, 
+        scale_fill_manual(values = colorRampPalette(brewer.pal(9, "Set1"))(length(unique(input_data[[input$var]]))),
+                          labels = comma, 
                           name = gsub("\\."," ",input$var))
     } 
     else {
