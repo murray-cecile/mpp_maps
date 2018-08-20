@@ -16,17 +16,7 @@
 # Author: Sifan Liu
 # Date: Thu Jul 26 09:13:31 2018
 # --------------
-# pkgs <- c('dplyr','maps','mapproj','ggplot2','scales','ggthemes','RColorBrewer','plotly','fiftystater',
-          # 'shiny','colourpicker','plyr')
 
-# check <- sapply(pkgs,require,warn.conflicts = TRUE,character.only = TRUE)
-# if(any(!check)){
-#     pkgs.missing <- pkgs[!check]
-#     install.packages(pkgs.missing)
-#     check <- sapply(pkgs.missing,require,warn.conflicts = TRUE,character.only = TRUE)
-#   }
-
-# sapply(pkgs,require,warn.conflicts = TRUE,character.only = TRUE)
 
 # Read Data ---------------------------------------------------------------
 
@@ -44,12 +34,7 @@ library('colourpicker')
 library('plyr')
 
 
-states <- map_data("state")
-
-
-
 # Shiny R -----------------------------------------------------------------
-
 
 ui <- fluidPage(
   titlePanel("US State Mapping Tool"),
@@ -58,12 +43,13 @@ ui <- fluidPage(
     
     sidebarPanel(
       
-      helpText("Contact: sliu@brookings.edu"),
-      
+
+      helpText("If you have any questions or comments, please contact Sifan Liu (sliu@brookings.edu)"),
+
       fileInput('file1',"Choose CSV File",
                 accept = c(".csv")),
       
-      actionButton("choice", "show Data"),
+      actionButton("choice", "Show data"),
       
       tags$hr(),
       
@@ -101,22 +87,19 @@ server <- function(input, output,session) {
   output$contents <- renderTable({
 
     input_data <- info()
+    names(input_data) <- gsub("\\."," ", names(input_data))
+    input_data[-1] <- comma(input_data[-1],digits = 1)
     head(input_data)
 
   })
-
-  output$map <- renderPlot({
-    print(plotInput())
-  })
-    
     
   plotInput <- function(){
     
     input_data <- info()
     
     map_wrapper <- ggplot() + 
-      geom_map(data = states, map = fifty_states, size = 1,
-               aes(x = long, y = lat, map_id = region), 
+      geom_map(data = fifty_states, map = fifty_states, size = 1,
+               aes(x = long, y = lat, map_id = id), 
                fill = "light grey", color = "white") +
       geom_map(data = input_data, map = fifty_states, color = "white",
                aes_string(fill = input$var, map_id = 'State')) +
@@ -135,6 +118,7 @@ server <- function(input, output,session) {
         scale_fill_continuous(labels = comma, name = gsub("\\."," ",input$var),
                               low = input$low, high = input$high)
     }
+
   } 
     
   
@@ -144,8 +128,15 @@ server <- function(input, output,session) {
     },
     content = function(file){
       ggsave(file, plotInput(), device = input$filetype, width = 16, height = 10.4, bg = "transparent")
-    }
-  )
+
+   }) 
+    
+  output$map <- renderPlot({
+    print(plotInput())
+  })
+
+    
+  
   
 }
 
