@@ -5,17 +5,19 @@
 
 # https://shiny.rstudio.com/tutorial/written-tutorial/lesson5/
 
-# 1. ( ) File upload: https://shiny.rstudio.com/gallery/file-upload.html
+# 1. (/) File upload: https://shiny.rstudio.com/gallery/file-upload.html
 # 2. (/) Choose the variable to map for state color: https://github.com/daattali/colourpicker
 # 3. (/) Choose from the color template: https://drsimonj.svbtle.com/creating-corporate-colour-palettes-for-ggplot2
-# 4. ( ) Save the plot to local
-
+# 4. (/) Save the plot to local
+# 5. ( ) MSA bubble maps
+# 6. ( ) County maps
+# 7. (/) Select donwload option (pdf/png)
 
 # Author: Sifan Liu
 # Date: Thu Jul 26 09:13:31 2018
 # --------------
-pkgs <- c('dplyr','maps','mapproj','ggplot2','scales','ggthemes','RColorBrewer','plotly','fiftystater',
-          'shiny','colourpicker','plyr')
+# pkgs <- c('dplyr','maps','mapproj','ggplot2','scales','ggthemes','RColorBrewer','plotly','fiftystater',
+          # 'shiny','colourpicker','plyr')
 
 # check <- sapply(pkgs,require,warn.conflicts = TRUE,character.only = TRUE)
 # if(any(!check)){
@@ -24,12 +26,25 @@ pkgs <- c('dplyr','maps','mapproj','ggplot2','scales','ggthemes','RColorBrewer',
 #     check <- sapply(pkgs.missing,require,warn.conflicts = TRUE,character.only = TRUE)
 #   }
 
-sapply(pkgs,require,warn.conflicts = TRUE,character.only = TRUE)
+# sapply(pkgs,require,warn.conflicts = TRUE,character.only = TRUE)
 
 # Read Data ---------------------------------------------------------------
+
+
+library('maps')
+library('mapproj')
+library('ggplot2')
+library('scales')
+library('ggthemes')
+library('RColorBrewer')
+library('plotly')
+library('fiftystater')
+library('shiny')
+library('colourpicker')
+library('plyr')
+
+
 states <- map_data("state")
-
-
 
 
 
@@ -43,7 +58,7 @@ ui <- fluidPage(
     
     sidebarPanel(
       
-      helpText("For help: sliu@brookings.edu"),
+      helpText("Contact: sliu@brookings.edu"),
       
       fileInput('file1',"Choose CSV File",
                 accept = c(".csv")),
@@ -58,6 +73,7 @@ ui <- fluidPage(
       colourInput("low", "Choose a color for low value","#deebf7"),
       colourInput("high", "Choose a color for high value", "#08519c"),
       
+      radioButtons("filetype", "File type:", choices = c("png", "pdf")),
       downloadButton("plot", label = "Download the plot")
     ),
    
@@ -99,31 +115,35 @@ server <- function(input, output,session) {
     input_data <- info()
     
     map_wrapper <- ggplot() + 
-      geom_map(data = states, map = fifty_states, aes(x = long, y = lat, map_id = region),fill = "white", color = "grey") +
-      geom_map(data = input_data, map = fifty_states, aes_string(fill = input$var, map_id = 'State')) +
-      labs(x=NULL, y=NULL) + 
-      coord_map("albers", lat0 = 39, lat1 = 45) + 
-      theme(panel.border = element_blank()) + 
-      theme(panel.background = element_blank()) + 
-      theme(axis.ticks = element_blank()) + 
-      theme(axis.text = element_blank())
+      geom_map(data = states, map = fifty_states, size = 1,
+               aes(x = long, y = lat, map_id = region), 
+               fill = "light grey", color = "white") +
+      geom_map(data = input_data, map = fifty_states, color = "white",
+               aes_string(fill = input$var, map_id = 'State')) +
+      coord_map("albers", lat0 = 39, lat1 = 45) +
+      theme_map() %+% 
+      theme(legend.key = element_rect(colour = NA, fill = NA))
     
     if (is.discrete(input_data[[input$var]])){
       map_wrapper + 
-        scale_fill_brewer()
-    } else {
+        scale_fill_manual(values = colorRampPalette(brewer.pal(9, "Set1"))(length(unique(input_data[[input$var]]))),
+                          labels = comma, 
+                          name = gsub("\\."," ",input$var))
+    } 
+    else {
       map_wrapper + 
-        scale_fill_gradient(low = input$low, high = input$high)
+        scale_fill_continuous(labels = comma, name = gsub("\\."," ",input$var),
+                              low = input$low, high = input$high)
     }
-    
-    
   } 
     
   
   output$plot <- downloadHandler(
-    filename = 'plot.pdf',
+    filename = function(){
+      paste("plot", input$filetype, sep = ".")
+    },
     content = function(file){
-      ggsave(file, plotInput(),device = 'pdf',width = 16, height = 10.4)
+      ggsave(file, plotInput(), device = input$filetype, width = 16, height = 10.4, bg = "transparent")
     }
   )
   
