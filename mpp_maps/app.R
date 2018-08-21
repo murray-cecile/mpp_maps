@@ -98,8 +98,7 @@ server <- function(input, output,session) {
     input_data <- info()
     
     map_wrapper <- ggplot() + 
-      geom_map(data = fifty_states, map = fifty_states, size = 1,
-               aes(x = long, y = lat, map_id = id), 
+      geom_map(data = fifty_states, map = fifty_states, size = 1,aes(map_id = id), 
                fill = "light grey", color = "white") +
       geom_map(data = input_data, map = fifty_states, color = "white",
                aes_string(fill = input$var, map_id = 'State')) +
@@ -116,7 +115,7 @@ server <- function(input, output,session) {
     else {
       map_wrapper + 
         scale_fill_continuous(labels = comma, name = gsub("\\."," ",input$var),
-                              low = input$low, high = input$high)
+                              low = input$low, high = input$high, space = "Lab",guide = "colourbar")
     }
 
   } 
