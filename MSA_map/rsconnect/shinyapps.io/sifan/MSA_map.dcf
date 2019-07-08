@@ -1,0 +1,12 @@
+name: MSA_map
+title: MSA_map
+username:
+account: sifan
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 405739
+bundleId: 1549458
+url: https://sifan.shinyapps.io/MSA_map/
+when: 1534972847.4345
+asMultiple: FALSE
+asStatic: FALSE

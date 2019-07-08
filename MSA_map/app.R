@@ -20,6 +20,7 @@ library('fiftystater')
 library('shiny')
 library('colourpicker')
 library('dplyr')
+library('plyr')
 library('tigris')
 library("shinythemes")
 
@@ -119,7 +120,7 @@ server <- function(input, output,session) {
                fill = "light grey", color = "white", size = 1) + 
       geom_point(data = input_data, 
                  aes_string(x = "long", y = "lat", color = input$var, size = input$var2)) +
-      scale_size_continuous(range = c(1,10)) +
+      scale_size_continuous(range = c(4,10)) +
       coord_map("albers", lat0=39, lat1=45) +
       theme_map()
     
